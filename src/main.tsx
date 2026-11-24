@@ -758,16 +758,20 @@ function Exercises({
             </thead>
             <tbody>
               {list.map((e) => (
-                <tr key={e.id} className={selected === e.id ? "selected" : ""}>
+                <tr
+                  key={e.id}
+                  className={`selectable-row${selected === e.id ? " selected" : ""}`}
+                  onClick={() => {
+                    if (selected !== e.id && confirmLeave()) {
+                      onDirty(false);
+                      setSelected(e.id);
+                    }
+                  }}
+                >
                   <td>
                     <button
                       className="text-button"
-                      onClick={() => {
-                        if (confirmLeave()) {
-                          onDirty(false);
-                          setSelected(e.id);
-                        }
-                      }}
+                      aria-pressed={selected === e.id}
                     >
                       {e.name}
                     </button>
@@ -1034,17 +1038,18 @@ function Templates({
                 .map((t) => (
                   <tr
                     key={t.detail.id}
-                    className={selected === t.detail.id ? "selected" : ""}
+                    className={`selectable-row${selected === t.detail.id ? " selected" : ""}`}
+                    onClick={() => {
+                      if (selected !== t.detail.id && confirmLeave()) {
+                        onDirty(false);
+                        setSelected(t.detail.id);
+                      }
+                    }}
                   >
                     <td>
                       <button
                         className="text-button"
-                        onClick={() => {
-                          if (confirmLeave()) {
-                            onDirty(false);
-                            setSelected(t.detail.id);
-                          }
-                        }}
+                        aria-pressed={selected === t.detail.id}
                       >
                         {t.detail.name}
                       </button>
