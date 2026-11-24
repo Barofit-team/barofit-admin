@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: barofit-admin
+  namespace: barofit
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: barofit-admin
+  template:
+    metadata:
+      labels:
+        app: barofit-admin
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: admin
+          image: 373514675861.dkr.ecr.ap-northeast-2.amazonaws.com/barofit-admin:b1eea33
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3100
+          env:
+            - name: ADMIN_ORIGIN
+              value: https://admin.barofit.cloud
+            - name: IDENTITY_URL
+              value: http://identity-service:8080
+            - name: ROUTINE_URL
+              value: http://routine-service:8080
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: barofit-admin
+  namespace: barofit
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+spec:
+  selector:
+    app: barofit-admin
+  ports:
+    - name: http
+      port: 3100
+      targetPort: http
