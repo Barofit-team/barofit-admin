@@ -33,4 +33,14 @@ CI에서 운영 비밀번호나 AWS 자격 증명은 사용하지 않습니다.
 
 현재 웹 세션은 서버 메모리에 저장합니다. 단일 인스턴스로 배포하고,
 여러 복제본 운영 시 공유 세션 저장소를 먼저 연결합니다. 재시작 시 재로그인합니다.
-실제 도메인·HTTPS·EKS 배포와 최초 운영 계정 생성은 별도 작업입니다.
+운영 주소: https://admin.barofit.cloud
+EKS: barofit 네임스페이스의 barofit-admin, 단일 인스턴스.
+배포: kubectl apply -f deploy/eks.yaml
+기존 barofit-api Ingress에 admin.barofit.cloud 호스트를 추가합니다.
+deploy/api-ingress-admin.patch.json은 최초 연결용이며 중복 적용하지 않습니다.
+HTTPS는 기존 ACM 와일드카드 인증서를 사용하고 DNS는 기존 API ALB를 가리킵니다.
+Ingress 교체 시 관리자 호스트 규칙도 유지해야 합니다.
+최초 운영 관리자 생성 완료. 생성용 Job과 Kubernetes Secret은 제거했습니다.
+초기 자격 증명: AWS Secrets Manager barofit/prod/admin-initial.
+최초 로그인 후 비밀번호를 변경하면 위 초기 비밀번호는 더 이상 유효하지 않습니다.
+소스 변경 배포 시 새 이미지 태그로 deploy/eks.yaml을 갱신합니다.
