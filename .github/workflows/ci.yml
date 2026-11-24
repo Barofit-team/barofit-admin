@@ -1,0 +1,47 @@
+name: Admin CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
+      - name: Build production container
+        run: docker build --platform linux/amd64 -t barofit-admin:ci .
+      - name: Smoke test production container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name admin-smoke -p 127.0.0.1:3100:3100 \
+            -e ADMIN_ORIGIN=https://admin.barofit.cloud barofit-admin:ci
+          trap 'docker logs admin-smoke; docker rm -f admin-smoke' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3100/healthz; then
+              curl --fail --silent http://127.0.0.1:3100/ > /dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1

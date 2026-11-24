@@ -1,0 +1,16 @@
+name: 관리자 기능·개선
+description: 관리자 웹의 기능과 개선 작업
+title: "[ADMIN] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 해결할 문제
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 완료 조건
+    validations:
+      required: true

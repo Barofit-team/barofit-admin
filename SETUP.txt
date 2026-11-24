@@ -1,0 +1,36 @@
+Barofit Admin
+
+1. Node 22.13 이상을 사용합니다(.nvmrc: 22).
+2. npm ci
+3. cp .env.example .env 후 IDENTITY_URL, ROUTINE_URL을 실행 중인 백엔드로 설정합니다.
+4. npm run dev:all
+5. http://localhost:5173 에서 관리자 아이디·비밀번호로 로그인합니다.
+
+검사: npm run format:check / npm test / npm run build
+운영: npm run build 후 ADMIN_ORIGIN=https://관리자호스트 npm start
+컨테이너: docker build -t barofit-admin .
+실행: docker run --rm -p 3100:3100 --env-file .env barofit-admin
+운영 환경에서는 .env의 ADMIN_ORIGIN을 실제 HTTPS 관리자 주소로 설정합니다.
+
+백엔드 의존성:
+- barofit-identity: 관리자 회원 조회와 아이디·비밀번호 API, V7 마이그레이션
+- barofit-routine: 관리자 운동/루틴 API와 변경 이력, V12 마이그레이션
+- 웹 서버가 백엔드 서비스에 직접 연결하므로 브라우저 CORS 변경은 필요하지 않습니다.
+- API가 포함된 백엔드 변경을 배포한 뒤 웹을 배포합니다.
+
+최초 관리자(웹 서버가 아닌 identity 서비스에서 설정):
+ADMIN_BOOTSTRAP_ENABLED=true
+ADMIN_BOOTSTRAP_USERNAME=barofit-admin
+ADMIN_BOOTSTRAP_PASSWORD=Secret에서 주입한 12~64자, UTF-8 72바이트 이하 비밀번호
+최초 생성 후 ADMIN_BOOTSTRAP_ENABLED=false로 되돌리고 초기 비밀번호 환경 변수를 제거합니다.
+기존 계정의 비밀번호는 재시작이나 bootstrap으로 덮어쓰지 않습니다.
+로그인 후 관리자 웹에서 비밀번호를 변경할 수 있습니다. Google 계정은 필요하지 않습니다.
+비밀번호는 BCrypt 해시로만 저장됩니다. .env나 비밀번호를 Git에 올리지 않습니다.
+
+브랜치: 기능 브랜치 → dev PR → 검증 후 main PR
+CI: 포맷, 로그인/세션 테스트, 타입·프로덕션 빌드, Docker 빌드·기동 확인
+CI에서 운영 비밀번호나 AWS 자격 증명은 사용하지 않습니다.
+
+현재 웹 세션은 서버 메모리에 저장합니다. 단일 인스턴스로 배포하고,
+여러 복제본 운영 시 공유 세션 저장소를 먼저 연결합니다. 재시작 시 재로그인합니다.
+실제 도메인·HTTPS·EKS 배포와 최초 운영 계정 생성은 별도 작업입니다.
