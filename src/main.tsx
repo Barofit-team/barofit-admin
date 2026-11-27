@@ -758,16 +758,20 @@ function Exercises({
             </thead>
             <tbody>
               {list.map((e) => (
-                <tr key={e.id} className={selected === e.id ? "selected" : ""}>
+                <tr
+                  key={e.id}
+                  className={`selectable-row${selected === e.id ? " selected" : ""}`}
+                  onClick={() => {
+                    if (selected !== e.id && confirmLeave()) {
+                      onDirty(false);
+                      setSelected(e.id);
+                    }
+                  }}
+                >
                   <td>
                     <button
                       className="text-button"
-                      onClick={() => {
-                        if (confirmLeave()) {
-                          onDirty(false);
-                          setSelected(e.id);
-                        }
-                      }}
+                      aria-pressed={selected === e.id}
                     >
                       {e.name}
                     </button>
@@ -902,29 +906,25 @@ function ExerciseEditor({
         </div>
         <fieldset>
           <legend>
-            불편 부위 매핑 <span>복수 선택</span>
+            대표 불편 부위 <span>1개 선택</span>
           </legend>
           <div className="checkbox-grid">
             {(Object.keys(areas) as Area[]).map((area) => (
               <label key={area}>
                 <input
-                  type="checkbox"
-                  checked={draft.discomfortAreas.includes(area)}
-                  onChange={(e) =>
-                    patch({
-                      discomfortAreas: e.target.checked
-                        ? [...draft.discomfortAreas, area]
-                        : draft.discomfortAreas.filter((v) => v !== area),
-                    })
+                  type="radio"
+                  name="primary-discomfort-area"
+                  checked={
+                    draft.discomfortAreas.length === 1 &&
+                    draft.discomfortAreas[0] === area
                   }
+                  onChange={() => patch({ discomfortAreas: [area] })}
                 />
                 {areas[area]}
               </label>
             ))}
           </div>
-          <small>
-            주요 사용·지지 부위를 선택하세요. 최소 1개가 필요합니다.
-          </small>
+          <small>추천에 사용할 대표 부위를 하나만 선택하세요.</small>
         </fieldset>
         {(
           [
@@ -972,7 +972,7 @@ function ExerciseEditor({
         )}
         <button
           className="button primary save"
-          disabled={busy || !draft.discomfortAreas.length}
+          disabled={busy || draft.discomfortAreas.length !== 1}
         >
           {busy ? "저장 중…" : "변경 저장"}
         </button>
@@ -1034,17 +1034,18 @@ function Templates({
                 .map((t) => (
                   <tr
                     key={t.detail.id}
-                    className={selected === t.detail.id ? "selected" : ""}
+                    className={`selectable-row${selected === t.detail.id ? " selected" : ""}`}
+                    onClick={() => {
+                      if (selected !== t.detail.id && confirmLeave()) {
+                        onDirty(false);
+                        setSelected(t.detail.id);
+                      }
+                    }}
                   >
                     <td>
                       <button
                         className="text-button"
-                        onClick={() => {
-                          if (confirmLeave()) {
-                            onDirty(false);
-                            setSelected(t.detail.id);
-                          }
-                        }}
+                        aria-pressed={selected === t.detail.id}
                       >
                         {t.detail.name}
                       </button>
